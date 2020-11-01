@@ -10,7 +10,7 @@ import java.util.Hashtable;
 /**
  * This class is used to create manipulate campus objects.
  * @author Mohammad Daud Salimi
- * @version 1.0
+ * @version 2.0
  */
 public class Campus {
     private String campusName;

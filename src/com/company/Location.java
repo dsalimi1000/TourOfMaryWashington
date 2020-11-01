@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * This class is used to create and manipulate Location objects
  * @author Mohammad Daud Salimi
- * @version 1.0
+ * @version 2.0
  */
 public class Location {
     private String name;
@@ -20,6 +20,7 @@ public class Location {
     private Hashtable<String,Item> items;
     private String currentLineBack;
     private int numDoors;
+    private int numItems = 0;
 
     public Location(String namE){
         name = namE;
@@ -47,7 +48,7 @@ public class Location {
                 keepOn = false;
             }
             else {
-                describe = (describe+currentLine);
+                describe = (describe+"\n"+currentLine);
             }
         }
         description = describe;
@@ -97,24 +98,41 @@ public class Location {
     public String getDoors(){
         int i;
         int count = 0;
+        int num = 0;
         String allDoors = "";
         String anotherDoor;
         for(i=numDoors; i>0; i--){
-            anotherDoor = (doors.get(count).describe());
+            num++;
+            if(count==numDoors-1){
+                anotherDoor = num + ".  "+(doors.get(count).describe());
+            }
+            else {
+                anotherDoor = num + ".  " + (doors.get(count).describe())+"\n";
+            }
             count++;
-            allDoors = allDoors+ "   "+count + ".  " +anotherDoor+ "\n";
+            allDoors = allDoors+ "   "+anotherDoor;
         }
         return allDoors;
     }
+
+    /**
+     * Returns the combined String of all item objects and their messages
+     * @return String, all item objects and their messages
+     */
     public String getItems() {
-        Set<String> names = items.keySet();
-        String allItems = "";
-        for (String key : names) {
-            allItems = allItems+(items.get(key).getName() + ": " + items.get(key).getMessage()+"\n");
+        String allItems;
+        if (numItems > 0) {
+            Set<String> names = items.keySet();
+            allItems = "";
+            for (String key : names) {
+                allItems = "   "+allItems + (items.get(key).getName() + ": " + items.get(key).getMessage() + "\n");
+            }
+        }
+        else{
+            allItems = "   No items at this location";
         }
         return allItems;
     }
-
     /**
      * checks if the user selected direction has a valid door which to pass through.
      * If so, that location is returned, if not, the current location is returned.
@@ -152,14 +170,32 @@ public class Location {
         doors.add(door);
         numDoors++;
     }
+
+    /**
+     * adds an item object to the items hashtable
+     * @param item an item object
+     */
     public void addItem(Item item){
         items.put(item.getName(),item);
+        numItems++;
     }
+
+    /**
+     * returns an item object from the items hashtable by the item's name
+     * @param name String the name of the item
+     * @return Item the item by the name, (name)
+     */
     public Item getItem(String name){
         return items.get(name);
     }
+
+    /**
+     * removes an item from the items hashtable by the item's name
+     * @param item the item by the name, (name)
+     */
     public void removeItem(String item){
         items.remove(item);
+        numItems--;
     }
 
     /**
@@ -172,9 +208,17 @@ public class Location {
 
     /**
      * returns the true false statement, haveVisited
-     * @return boolean, if the location has been visited or not.
+     * @return boolean, if the location has been visited or not
      */
     public boolean haveVisited(){
         return haveVisited;
+    }
+
+    /**
+     * returns the number of items currently in the items hashtable
+     * @return int number of items in items hashtable
+     */
+    public int getNumItems(){
+        return numItems;
     }
 }

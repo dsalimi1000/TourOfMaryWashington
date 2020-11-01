@@ -1,6 +1,8 @@
-/**I hereby pledge upon my word of honor that I have neither given nor received unauthorized help on this work
+/**
+ * I hereby pledge upon my word of honor that I have neither given nor received unauthorized help on this work
  * Mohammad Daud Salimi
  * This is a program which takes a user on a tour of a campus.
+ *
  * @author Mohammad Daud Salimi
  * @version 1.0
  */
@@ -9,22 +11,25 @@ package com.company;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+
 /**
  * This is a program which takes a user on a tour of a campus.
  * @author Mohammad Daud Salimi
- * @version 1.0
+ * @version 2.0
  */
 public class TourUMW {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         promptUser();
     }
 
     /**
-     * This method takes user input to move around a campus using a user selected filename which is turned into a
+     * This method takes user input to move around a campus,
+     * as well as interact with objects in the campus,
+     * using a user selected filename which is turned into a
      * formatted campus object.
      */
-    public static void promptUser() {
+    public static void promptUser() throws InterruptedException {
         Scanner stdin = new Scanner(System.in);
         boolean invalid = true;
         Scanner s = null;
@@ -46,43 +51,135 @@ public class TourUMW {
         Campus campus = setUpCampus(s, filename);
         TourStatus tourStatus = new TourStatus();
         tourStatus.setCampus(campus);
-        invalid = true;
-        boolean invalidOption = true;
+        boolean invalidOption;
         boolean continueTour = true;
-        String direction = null;
-        System.out.println(campus.getStartingLocation().getDescription());
+        stdin = new Scanner(System.in);
+        String input = null;
+        String greeting = null;
+        boolean first = true;
+        boolean welcome = false;
+        Thread thread = new Thread();
+        UserInputCommand user = new MovementCommand("n");
         while (continueTour) {
-            invalid = true;
             invalidOption = true;
-            System.out.println(tourStatus.getCurrentLocation().getDoors());
-            System.out.println("Where would you like to go next or quit? (n, s, e, w,) or (q)?:  ");
+            if (first == true) {
+                if (!(tourStatus.getCurrentLocation().haveVisited())) {
+                    System.out.println((tourStatus.getCurrentLocation().getDescription()) + "\n");
+                    Thread.sleep(3000);
+                    System.out.println("You are currently at " + tourStatus.getCurrentLocation().getName() + "\n");
+                    Thread.sleep(2000);
+                    System.out.println("   Directions:" + "\n" + tourStatus.getCurrentLocation().getDoors() + "\n" +
+                            "   Items:" + "\n" + tourStatus.getCurrentLocation().getItems());
+                }
+            }
+            if (welcome) {
+                System.out.print(greeting);
+            }
             while (invalidOption) {
-                direction = stdin.next();
-                if (direction.equals("n") || direction.equals("s") || direction.equals("e") || direction.equals("w")
-                        || direction.equals("q")) {
+                System.out.println("Select:" + "\n" + "m:  Move" + "\n" + "p:  Pickup Item" + "\n" + "d:  Drop Item" +
+                        "\n" + "b:  Backpack" + "\n" + "q:  Quit");
+                input = stdin.nextLine();
+                if (!(input.equals("m") || (input.equals("p") || (input.equals("d") || (input.equals("b") ||
+                        input.equals("q")||(input.equals("move")||(input.equals("pickup")||
+                        (input.equals("drop")||(input.equals("backpack")||(input.equals("quit")||
+                                (input.equals("n")||(input.equals("s")||input.equals("e")||
+                                        (input.equals("w")))))))))))))) {
+                    user = new InvalidCommand(input);
+                    System.out.println(user.carryOut(tourStatus));
+                } else {
                     invalidOption = false;
-                } else {
-                    System.out.print("Invalid option, enter a valid option or quit (n, s, e, w) or (q):  ");
                 }
             }
-            if (direction.equals("q")) {
-                continueTour = false;
-                invalid = false;
-            }
-            while (invalid) {
-                Location moveChecker = tourStatus.getCurrentLocation();
-                tourStatus.updateTourLocation(direction);
-                if (moveChecker == tourStatus.getCurrentLocation()) {
-                    System.out.println("That direction doesn't lead anywhere, enter another direction" +
-                            " (n, s, e, w) or (q):  ");
-                    direction = stdin.next();
-                } else {
-                    System.out.println("You are now at " + tourStatus.getCurrentLocation().getName());
-                    if (tourStatus.getCurrentLocation().haveVisited() == false) {
-                        System.out.println(tourStatus.getCurrentLocation().getDescription());
+            if (input.equals("m")||input.equals("n")||(input.equals("s")||(input.equals("e")||
+                    input.equals("w")))) {
+                invalidOption = true;
+                if(input.equals("m")){
+                while (invalidOption) {
+                    System.out.println("Select a direction (n s e w):" + "\n" + tourStatus.getCurrentLocation().getDoors());
+                    input = stdin.nextLine();
+                    if (!(input.equals("n") || (input.equals("s") || (input.equals("e") || (input.equals("w")))))) {
+                        user = new InvalidCommand(input);
+                        System.out.println(user.carryOut(tourStatus));
+                    } else {
+                        invalidOption = false;
                     }
-                    invalid = false;
                 }
+                }
+                user = new MovementCommand(input);
+                greeting = user.carryOut(tourStatus);
+                first = false;
+                welcome = true;
+                if(greeting.equals("That doesn't lead anywhere")){
+                    System.out.println(greeting);
+                    first = welcome = false;
+                }
+            }
+            if (input.equals("p")||(input.equals("pickup"))) {
+                invalidOption = true;
+                boolean empty = false;
+                String currentItems = tourStatus.getCurrentLocation().getItems();
+                if (currentItems.equals("   No items at this location")) {
+                    System.out.println(currentItems);
+                    invalidOption = false;
+                    empty = true;
+                }
+                while (invalidOption) {
+                    System.out.println(tourStatus.getCurrentLocation().getItems() + "\n" +
+                            "Enter the exact name of an Item to pick up:  ");
+                    input = stdin.nextLine();
+                    Item m = tourStatus.getCurrentLocation().getItem(input);
+                    if (m == null) {
+                        user = new InvalidCommand(input);
+                        System.out.println(user.carryOut(tourStatus));
+                    }
+                    if (!(m == null)) {
+                        invalidOption = false;
+                    }
+                }
+                if (!(empty)) {
+                    user = new PickupCommand(input);
+                    System.out.println(user.carryOut(tourStatus));
+                }
+                welcome = false;
+            }
+            if (input.equals("d")||(input.equals("drop"))) {
+                invalidOption = true;
+                boolean empty = false;
+                if (tourStatus.getNumBackpackItems() == 0) {
+                    empty = true;
+                    invalidOption = false;
+                    System.out.println("Your backpack is empty");
+                }
+                while (invalidOption) {
+                    System.out.println(tourStatus.listBackpackItems() + "\n" +
+                            "Enter the exact name of an Item to drop:  ");
+                    input = stdin.nextLine();
+                    Item m = tourStatus.getItemFromBackpack(input);
+                    if (m == null) {
+                        user = new InvalidCommand(input);
+                        System.out.println(user.carryOut(tourStatus));
+                    }
+                    if (!(m == null)) {
+                        invalidOption = false;
+                    }
+                }
+                if (!(empty)) {
+                    user = new DropCommand(input);
+                    System.out.println(user.carryOut(tourStatus));
+                }
+                welcome = false;
+            }
+            if (input.equals("b")||(input.equals("backpack"))) {
+                if (tourStatus.getNumBackpackItems() > 0) {
+                    user = new BackpackCommand();
+                    System.out.print(user.carryOut(tourStatus));
+                } else {
+                    System.out.println("Your backpack is empty");
+                }
+                welcome = false;
+            }
+            if (input.equals("q")||(input.equals("quit"))) {
+                continueTour = false;
             }
         }
     }
